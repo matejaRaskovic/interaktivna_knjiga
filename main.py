@@ -7,7 +7,7 @@ from page import Page, page_0, page_1, page_2, page_3, page_4
 from page_card import PageCard
 from page_slideshow import PageSlideshow
 
-default_book_size = [1920, 1080]
+default_book_size = [1920, 1280]
 serialPort = serial.Serial(port='COM3', baudrate=9600, timeout=0)
 
 def get_touchboard_input():
@@ -31,7 +31,7 @@ def get_touchboard_input():
 
 if __name__ == '__main__':
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("frame", 1440, 920)
+    cv2.resizeWindow("frame", 1920, 1280)
     
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
