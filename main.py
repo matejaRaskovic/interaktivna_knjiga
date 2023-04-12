@@ -36,12 +36,27 @@ if __name__ == '__main__':
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    focus = 255  # min: 0, max: 255, increment:5
+    cap.set(cv2.CAP_PROP_FOCUS, focus) 
+
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    i = 0
+
     current_page = page_0()
     while True:
         t_bef_get = time()
         frame = current_page.get_frame()
         # frame = cv2.resize(frame, (1440, 920))
         cv2.imshow("frame", current_page.get_frame())
+        if i % 5:
+            ret, frame_cam = cap.read()
+            # print(frame_cam)
+            # cv2.imshow("frame", frame_cam)
+        i += 1
         t_after_get = time()
         print(t_after_get)
         print(t_bef_get)
