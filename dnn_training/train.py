@@ -185,8 +185,7 @@ def main():
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
     ),
-        torchvision.transforms.ColorJitter(hue=.05, saturation=.05),
-        torchvision.transforms.RandomRotation(20)
+        torchvision.transforms.RandomAffine(degrees=10, translate=[0.05, 0.05])
         ])
     
     target_transform=transforms.Compose([

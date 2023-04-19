@@ -157,19 +157,13 @@ if __name__ == '__main__':
     cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
     cv2.resizeWindow("frame", 1920, 1280)
 
-    # cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow("frame2", 1920, 1280)
+    cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("frame2", 50, 60)
     
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
-    # focus = 255  # min: 0, max: 255, increment:5
-    # cap.set(cv2.CAP_PROP_FOCUS, focus) 
-
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    current_position = [[350, 400], [350, 510]]
 
     i = 0
 
@@ -184,8 +178,10 @@ if __name__ == '__main__':
         cv2.imshow("frame", frame)
         if i % 5 == 0:
             frame_cam = video_getter.frame
+            frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
             # print(frame_cam)
-            # cv2.imshow("frame2", frame_cam)
+            cv2.imshow("frame2", frame_cam_cut)
+            print(current_position)
             check_page(frame_cam, 1)
         # i += 1
         # t_after_get = time()
@@ -221,6 +217,14 @@ if __name__ == '__main__':
             frame_gen.current_page.pass_control("2")
         elif wK & 0xFF == ord('l'):
             frame_gen.current_page.pass_control("3")
+        elif wK & 0xFF == ord('w'):
+            current_position[0] = [pos - 5 for pos in current_position[0]]
+        elif wK & 0xFF == ord('s'):
+            current_position[0] = [pos + 5 for pos in current_position[0]]
+        elif wK & 0xFF == ord('a'):
+            current_position[1] = [pos - 5 for pos in current_position[1]]
+        elif wK & 0xFF == ord('d'):
+            current_position[1] = [pos + 5 for pos in current_position[1]]
 
         # touchboard_input = get_touchboard_input()
         # if touchboard_input != "":
