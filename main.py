@@ -9,9 +9,18 @@ from page_card import PageCard
 from page_slideshow import PageSlideshow
 
 from dnn_training.train import Net
+from torchvision import transforms
+import torch
+import torchvision
 
 default_book_size = [1920, 1280]
 # serialPort = serial.Serial(port='COM3', baudrate=9600, timeout=0)
+
+recog_pos = [[[350, 380], [650, 680]],
+             [[350, 380], [650, 680]],
+             [[350, 380], [650, 680]],
+             [[350, 380], [650, 680]],
+             [[350, 380], [650, 680]]]
 
 initial_frame = np.zeros((1920, 1280, 3)).astype(np.uint8)
 
@@ -38,6 +47,34 @@ from threading import Thread, Lock
 import cv2
 
 lock = Lock()
+
+net = Net()
+net.load_state_dict(torch.load('dnn_training\\smaller_ar_book_1.pt'))
+
+transform = transforms.Compose([
+        transforms.ToTensor(),
+        torchvision.transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225],
+    )])
+
+def check_page(image, page_num):
+    with lock:
+        in_img = image[recog_pos[page_num][0][0]:recog_pos[page_num][0][1], recog_pos[page_num][1][0]:recog_pos[page_num][1][1]]
+        print(in_img.shape)
+        tnsr = transform(in_img)
+        tnsr = tnsr.unsqueeze(0)
+        with torch.no_grad():
+            out = net(tnsr)
+
+        m_ind = torch.argmax(out).item()
+        m_val = torch.max(out).item()
+
+        print(m_ind, m_val)
+
+def find_page(image):
+    for page_num in [1, 2, 3, 4]:
+        a = 5
 
 class VideoGet:
     """
@@ -117,11 +154,11 @@ class FrameGenerator:
 
 
 if __name__ == '__main__':
-    # cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
-    # cv2.resizeWindow("frame", 1920, 1280)
+    cv2.namedWindow("frame", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("frame", 1920, 1280)
 
-    cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("frame2", 1920, 1280)
+    # cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
+    # cv2.resizeWindow("frame2", 1920, 1280)
     
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -144,11 +181,12 @@ if __name__ == '__main__':
         t_bef_get = time()
         frame = frame_gen.get_frame()
         # frame = cv2.resize(frame, (1440, 920))
-        # cv2.imshow("frame", frame)
+        cv2.imshow("frame", frame)
         if i % 5 == 0:
             frame_cam = video_getter.frame
             # print(frame_cam)
-            cv2.imshow("frame2", frame_cam)
+            # cv2.imshow("frame2", frame_cam)
+            check_page(frame_cam, 1)
         # i += 1
         # t_after_get = time()
         # print(t_after_get)
@@ -175,6 +213,15 @@ if __name__ == '__main__':
         elif wK & 0xFF == ord('0'):
             del frame_gen.current_page
             frame_gen.current_page = page_0()
+        elif wK & 0xFF == ord('i'):
+            frame_gen.current_page.pass_control("0")
+        elif wK & 0xFF == ord('o'):
+            frame_gen.current_page.pass_control("1")
+        elif wK & 0xFF == ord('k'):
+            frame_gen.current_page.pass_control("2")
+        elif wK & 0xFF == ord('l'):
+            frame_gen.current_page.pass_control("3")
+
         # touchboard_input = get_touchboard_input()
         # if touchboard_input != "":
         #     # current_page = pages[int(touchbourd_input)]
