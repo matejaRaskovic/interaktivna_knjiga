@@ -3,6 +3,7 @@ import serial
 
 from time import time
 import numpy as np
+import os
 
 from page import Page, page_0, page_1, page_2, page_3, page_4
 from page_card import PageCard
@@ -163,7 +164,7 @@ if __name__ == '__main__':
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    current_position = [[350, 400], [350, 510]]
+    current_position = [[350, 400], [450, 510]]
 
     i = 0
 
@@ -177,10 +178,13 @@ if __name__ == '__main__':
         # frame = cv2.resize(frame, (1440, 920))
         cv2.imshow("frame", frame)
         if i % 5 == 0:
+            fldr_out = "dnn_training\\data_new_1\\0"
+            os.makedirs(fldr_out, exist_ok=True)
             frame_cam = video_getter.frame
             frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
             # print(frame_cam)
             cv2.imshow("frame2", frame_cam_cut)
+            cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam_cut)
             print(current_position)
             check_page(frame_cam, 1)
         # i += 1
