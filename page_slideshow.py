@@ -1,8 +1,13 @@
+import cv2
+import os
+
 class PageSlideshow:
   def __init__(self, images_path, left_control, right_control):
     self.images_path = images_path
     self.left_control = left_control
     self.right_control = right_control
+    self.img_pths = [os.join(images_path, pth) for pth in os.listdir(images_path)]
+    self.images = [cv2.imread(pth) for pth in self.img_pths]
 
   def get_frame(self):
     # implement preparing next frame

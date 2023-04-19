@@ -192,13 +192,9 @@ def main():
     target_transform=transforms.Compose([
         transforms.ToTensor()
         ])
-    # dataset1 = datasets.MNIST('../data', train=True, download=True,
-    #                    transform=transform)
-    # dataset2 = datasets.MNIST('../data', train=False,
-    #                    transform=transform)
     dataset = PageFeaturesDataset('data', transform=transform, target_transform=target_transform)
     # train_set, val_set = torch.utils.data.random_split(dataset, [72, 40])
-    train_set, val_set = torch.utils.data.random_split(dataset, [240, 40])
+    train_set, val_set = torch.utils.data.random_split(dataset, [0.8, 0.2])
     train_loader = torch.utils.data.DataLoader(train_set,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(val_set, **test_kwargs)
 
@@ -210,6 +206,7 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
+        torch.save(model.state_dict(), "smaller_ar_book_1.pt")
         scheduler.step()
 
     if args.save_model:
