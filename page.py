@@ -12,6 +12,7 @@ class Page:
         self.finished_initial_video = False
         self.vid = cv2.VideoCapture(self.video_path)
         self.last_video_frame = None
+        self.lighted = False
 
     def get_frame(self):
         frame_to_display = self.last_video_frame
@@ -24,12 +25,16 @@ class Page:
                 self.last_video_frame = frame
             frame_to_display = frame
 
-        if self.finished_initial_video:
-            if len(self.overlays) > 0:
-                left = self.overlays[0].get_frame()
-                right = self.overlays[1].get_frame()
-                frame_to_display = np.concatenate((left, right), axis=1)
-                print(frame_to_display.shape)
+        # Commented out to capture data for training
+        # if self.finished_initial_video:
+        #     if len(self.overlays) > 0:
+        #         left = self.overlays[0].get_frame()
+        #         right = self.overlays[1].get_frame()
+        #         frame_to_display = np.concatenate((left, right), axis=1)
+        #         print(frame_to_display.shape)
+
+        # Calculate if lighted
+        self.lighted = np.mean(frame_to_display[400:450, 400:450]) > 60
         
         return frame_to_display
         
@@ -61,4 +66,4 @@ def page_4():
                 PageCard("data\\page_card_sequences\\desno_izvlacenje_kartice.mp4", "1")])
 
 def page_0():
-    return Page("data\\page_videos\\white_video.avi", [])
+    return Page("data\\page_videos\\black_video.avi", [])

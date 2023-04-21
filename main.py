@@ -4,6 +4,7 @@ import serial
 from time import time
 import numpy as np
 import os
+import random
 
 from page import Page, page_0, page_1, page_2, page_3, page_4
 from page_card import PageCard
@@ -49,8 +50,8 @@ import cv2
 
 lock = Lock()
 
-net = Net()
-net.load_state_dict(torch.load('dnn_training\\smaller_ar_book_1.pt'))
+# net = Net()
+# net.load_state_dict(torch.load('dnn_training\\smaller_ar_book_1.pt'))
 
 transform = transforms.Compose([
         transforms.ToTensor(),
@@ -162,7 +163,7 @@ if __name__ == '__main__':
     cv2.resizeWindow("frame2", 50, 60)
     
     # Use this to enable full screen for projection
-    # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     current_position = [[350, 400], [450, 510]]
 
@@ -171,22 +172,32 @@ if __name__ == '__main__':
     video_getter = VideoGet(0).start()
     frame_gen = FrameGenerator().start()
 
+    shift_random = True
+
     current_page = page_0()
     while True:
         t_bef_get = time()
         frame = frame_gen.get_frame()
+        video_getter.set_lighted(frame_gen.current_page.lighted)
         # frame = cv2.resize(frame, (1440, 920))
+        if shift_random:
+            shift_by = 70
+            M = np.float32([
+                [1, 0, random.randint(-shift_by, shift_by)],
+                [0, 1, random.randint(-shift_by, shift_by)]
+            ])
+            frame = cv2.warpAffine(frame, M, (frame.shape[1], frame.shape[0]))
         cv2.imshow("frame", frame)
-        if i % 5 == 0:
-            fldr_out = "dnn_training\\data_new_1\\0"
+        if i % 3 == 0:
+            fldr_out = "dnn_training\\data_whole_images_with_shifted_projection_1\\0"
             os.makedirs(fldr_out, exist_ok=True)
             frame_cam = video_getter.frame
             frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
             # print(frame_cam)
             cv2.imshow("frame2", frame_cam_cut)
-            cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam_cut)
+            cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam)
             print(current_position)
-            check_page(frame_cam, 1)
+            # check_page(frame_cam, 1)
         # i += 1
         # t_after_get = time()
         # print(t_after_get)
