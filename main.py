@@ -18,11 +18,11 @@ import torchvision
 default_book_size = [1920, 1280]
 # serialPort = serial.Serial(port='COM3', baudrate=9600, timeout=0)
 
-recog_pos = [[[350, 380], [650, 680]],
-             [[350, 380], [650, 680]],
-             [[350, 380], [650, 680]],
-             [[350, 380], [650, 680]],
-             [[350, 380], [650, 680]]]
+recog_pos = [[],
+             [[85, 135], [700, 760]],
+             [[80, 130], [655, 715]],
+             [[65, 115], [535, 595]],
+             [[65, 115], [480, 540]]]
 
 initial_frame = np.zeros((1920, 1280, 3)).astype(np.uint8)
 
@@ -87,6 +87,7 @@ class VideoGet:
     def __init__(self, src=0):
         self.stream = cv2.VideoCapture(src, cv2.CAP_DSHOW)
 
+        self.stream.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         focus = 255  # min: 0, max: 255, increment:5
         self.stream.set(cv2.CAP_PROP_FOCUS, focus) 
 
@@ -109,9 +110,9 @@ class VideoGet:
     def get(self):
         while not self.stopped:
             if not self.lighted:
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, -4)
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, -5)
             else:
-                self.stream.set(cv2.CAP_PROP_EXPOSURE, -9)
+                self.stream.set(cv2.CAP_PROP_EXPOSURE, -10)
             if not self.grabbed:
                 self.stop()
             else:
@@ -160,42 +161,49 @@ if __name__ == '__main__':
     cv2.resizeWindow("frame", 1920, 1280)
 
     cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("frame2", 50, 60)
+    cv2.resizeWindow("frame2", 60, 50)
     
     # Use this to enable full screen for projection
-    cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    current_position = [[350, 400], [450, 510]]
+    current_position = [[65, 115], [535, 595]]
 
     i = 0
 
-    video_getter = VideoGet(0).start()
+    # video_getter = VideoGet(0).start()
     frame_gen = FrameGenerator().start()
 
     shift_random = True
 
-    current_page = page_0()
+    frame_to_find_position = cv2.imread(r"dnn_training\data_whole_images_with_shifted_projection_4\1\5.jpg")
+
+    current_page = page_1()
     while True:
         t_bef_get = time()
         frame = frame_gen.get_frame()
-        video_getter.set_lighted(frame_gen.current_page.lighted)
+        # video_getter.set_lighted(frame_gen.current_page.lighted)
         # frame = cv2.resize(frame, (1440, 920))
         if shift_random:
-            shift_by = 70
-            M = np.float32([
-                [1, 0, random.randint(-shift_by, shift_by)],
-                [0, 1, random.randint(-shift_by, shift_by)]
-            ])
+            if i % 50 == 0:
+                shift_by = 50
+                M = np.float32([
+                    [1, 0, random.randint(-shift_by, shift_by)],
+                    [0, 1, random.randint(-shift_by, shift_by)]
+                ])
             frame = cv2.warpAffine(frame, M, (frame.shape[1], frame.shape[0]))
         cv2.imshow("frame", frame)
+        # with lock:
+        #     video_getter.get()
         if i % 3 == 0:
-            fldr_out = "dnn_training\\data_whole_images_with_shifted_projection_1\\0"
-            os.makedirs(fldr_out, exist_ok=True)
-            frame_cam = video_getter.frame
-            frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
+            # fldr_out = "dnn_training\\data_whole_images_with_shifted_projection_4\\1"
+            # os.makedirs(fldr_out, exist_ok=True)
+            # frame_cam = video_getter.frame
+            # frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
+            frame_cam_cut = frame_to_find_position[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
+            print(frame_cam_cut.shape)
             # print(frame_cam)
             cv2.imshow("frame2", frame_cam_cut)
-            cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam)
+            # cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam)
             print(current_position)
             # check_page(frame_cam, 1)
         # i += 1
@@ -248,5 +256,5 @@ if __name__ == '__main__':
 
         i += 1
 
-    video_getter.stop()
+    # video_getter.stop()
     frame_gen.stop()

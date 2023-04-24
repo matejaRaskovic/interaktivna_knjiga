@@ -18,6 +18,14 @@ import numpy as np
 
 import PIL
 
+recog_pos = [[],
+             [[85, 135], [700, 760]],
+             [[80, 130], [655, 715]],
+             [[65, 115], [535, 595]],
+             [[65, 115], [480, 540]]]
+
+page_num = 1
+
 class PageFeaturesDataset(Dataset):
     def __init__(self, img_dir, transform=None, target_transform=None):
         self.img_dir = img_dir
@@ -33,6 +41,7 @@ class PageFeaturesDataset(Dataset):
                 gray = image
                 # _, gray = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
                 gray = gray.astype(np.float32) / 255.0
+                gray = gray[recog_pos[page_num][0][0]:recog_pos[page_num][0][1], recog_pos[page_num][1][0]:recog_pos[page_num][1][1]]
                 # cv2.imshow("gray", gray)
                 # cv2.waitKey()
                 # gray = gray[newaxis, :, :]
@@ -72,7 +81,7 @@ class Net(nn.Module):
         # self.conv3 = nn.Conv2d(64, 128, kernel_size=3)
         # self.conv4 = nn.Conv2d(128, 128, kernel_size=3)
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(2880, 50)
+        self.fc1 = nn.Linear(11880, 50)
         self.fc2 = nn.Linear(50, 2)
 
     def forward(self, x):
@@ -191,7 +200,7 @@ def main():
     target_transform=transforms.Compose([
         transforms.ToTensor()
         ])
-    dataset = PageFeaturesDataset('data', transform=transform, target_transform=target_transform)
+    dataset = PageFeaturesDataset('data_whole_images_with_shifted_projection_' + str(page_num), transform=transform, target_transform=target_transform)
     # train_set, val_set = torch.utils.data.random_split(dataset, [72, 40])
     train_set, val_set = torch.utils.data.random_split(dataset, [0.8, 0.2])
     train_loader = torch.utils.data.DataLoader(train_set,**train_kwargs)
