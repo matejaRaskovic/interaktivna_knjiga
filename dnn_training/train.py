@@ -24,7 +24,7 @@ recog_pos = [[],
              [[65, 115], [535, 595]],
              [[65, 115], [480, 540]]]
 
-page_num = 1
+page_num = 4
 
 class PageFeaturesDataset(Dataset):
     def __init__(self, img_dir, transform=None, target_transform=None):
@@ -81,7 +81,7 @@ class Net(nn.Module):
         # self.conv3 = nn.Conv2d(64, 128, kernel_size=3)
         # self.conv4 = nn.Conv2d(128, 128, kernel_size=3)
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(11880, 50)
+        self.fc1 = nn.Linear(2860, 50)
         self.fc2 = nn.Linear(50, 2)
 
     def forward(self, x):
@@ -93,7 +93,7 @@ class Net(nn.Module):
         # x = F.relu(x)
         # x = self.conv4(x)
         # x = F.relu(x)
-        x = F.max_pool2d(x, 2)
+        x = F.max_pool2d(x, 4)
         x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)
@@ -148,7 +148,7 @@ def main():
                         help='input batch size for training (default: 8)')
     parser.add_argument('--test-batch-size', type=int, default=2, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=100, metavar='N',
+    parser.add_argument('--epochs', type=int, default=15, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                         help='learning rate (default: 1.0)')
@@ -214,7 +214,7 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
-        torch.save(model.state_dict(), "smaller_ar_book_1.pt")
+        torch.save(model.state_dict(), "latest_standardized_model_" + str(page_num) + ".pt")
         scheduler.step()
 
     if args.save_model:
