@@ -1,30 +1,33 @@
 import cv2
 import serial
-
-from time import time
 import numpy as np
 import os
 import random
 
-from page import Page, page_0, page_1, page_2, page_3, page_4
-from page_card import PageCard
-from page_slideshow import PageSlideshow
+# from time import time
+import numpy as np
+import os
+import random
+
+from page import page_0, page_1, page_2, page_3, page_4
 
 from dnn_training.train import Net
 from torchvision import transforms
 import torch
 import torchvision
 
-default_book_size = [1920, 1280]
+from threading import Thread, Lock
+
+# Global variables
 # serialPort = serial.Serial(port='COM3', baudrate=9600, timeout=0)
+lock = Lock()
+# net = Net()
 
 recog_pos = [[],
              [[85, 135], [700, 760]],
              [[80, 130], [655, 715]],
              [[65, 115], [535, 595]],
              [[65, 115], [480, 540]]]
-
-initial_frame = np.zeros((1920, 1280, 3)).astype(np.uint8)
 
 def get_touchboard_input():
     sArduino = serialPort.readline(1)
@@ -44,15 +47,6 @@ def get_touchboard_input():
     
     return ""
 
-
-from threading import Thread, Lock
-import cv2
-
-lock = Lock()
-
-# net = Net()
-# net.load_state_dict(torch.load('dnn_training\\smaller_ar_book_1.pt'))
-
 transform = transforms.Compose([
         transforms.ToTensor(),
         torchvision.transforms.Normalize(
@@ -69,8 +63,8 @@ def check_page(image, page_num):
         with torch.no_grad():
             out = net(tnsr)
 
-        page_val = out[1].item()
-        no_page_val = out[0].item()
+        page_val = out[0, 1].item()
+        no_page_val = out[0, 0].item()
 
         if page_val < no_page_val * 3:
             return True
@@ -88,8 +82,8 @@ def find_page(image):
             with torch.no_grad():
                 out = net(tnsr)
 
-            page_val = out[1].item()
-            no_page_val = out[0].item()
+            page_val = out[0, 1].item()
+            no_page_val = out[0, 0].item()
 
             if no_page_val < page_val * 3:
                 return page_num
@@ -149,7 +143,7 @@ class FrameGenerator:
 
     def __init__(self):
         self.current_page = page_0()
-        self.current_frame = initial_frame
+        self.current_frame = np.zeros((1920, 1280, 3)).astype(np.uint8)
         self.stopped = False
 
         self.read = False
@@ -192,13 +186,14 @@ if __name__ == '__main__':
     # video_getter = VideoGet(0).start()
     frame_gen = FrameGenerator().start()
 
-    shift_random = True
+    shift_random = False
 
     while True:
-        t_bef_get = time()
+        # t_bef_get = time()
         frame = frame_gen.get_frame()
         # video_getter.set_lighted(frame_gen.current_page.lighted)
         if shift_random:
+            # Used to generate versified dataset
             if i % 50 == 0:
                 shift_by = 50
                 M = np.float32([
