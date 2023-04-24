@@ -7,7 +7,7 @@ import random
 # from time import time
 import numpy as np
 import os
-import random
+from math import exp
 
 from page import page_0, page_1, page_2, page_3, page_4
 
@@ -21,7 +21,8 @@ from threading import Thread, Lock
 # Global variables
 # serialPort = serial.Serial(port='COM3', baudrate=9600, timeout=0)
 lock = Lock()
-# net = Net()
+net = Net().eval()
+net.load_state_dict(torch.load("dnn_training\\latest_standardized_model_1.pt"))
 
 recog_pos = [[],
              [[85, 135], [700, 760]],
@@ -57,16 +58,18 @@ transform = transforms.Compose([
 def check_page(image, page_num):
     with lock:
         in_img = image[recog_pos[page_num][0][0]:recog_pos[page_num][0][1], recog_pos[page_num][1][0]:recog_pos[page_num][1][1]]
-        print(in_img.shape)
+        in_img = in_img.astype(np.float32) / 255.0
         tnsr = transform(in_img)
         tnsr = tnsr.unsqueeze(0)
         with torch.no_grad():
             out = net(tnsr)
 
-        page_val = out[0, 1].item()
-        no_page_val = out[0, 0].item()
+        page_val = exp((out[0, 1].item()))
+        no_page_val = exp((out[0, 0].item()))
 
-        if page_val < no_page_val * 3:
+        print(no_page_val, page_val)
+
+        if no_page_val < page_val * 3:
             return True
         else:
             return False
@@ -76,16 +79,19 @@ def find_page(image):
         net.load_state_dict(torch.load("dnn_training\\latest_standardized_model_" + str(page_num) + ".pt"))
         with lock:
             in_img = image[recog_pos[page_num][0][0]:recog_pos[page_num][0][1], recog_pos[page_num][1][0]:recog_pos[page_num][1][1]]
-            print(in_img.shape)
+            in_img = in_img.astype(np.float32) / 255.0
             tnsr = transform(in_img)
             tnsr = tnsr.unsqueeze(0)
             with torch.no_grad():
                 out = net(tnsr)
 
-            page_val = out[0, 1].item()
-            no_page_val = out[0, 0].item()
+            page_val = exp(out[0, 1].item())
+            no_page_val = exp(out[0, 0].item())
 
-            if no_page_val < page_val * 3:
+            print(page_num, no_page_val, page_val)
+
+            if page_val > no_page_val * 3:
+                # cv2.imshow("frame2", in_img)
                 return page_num
 
     return 0
@@ -173,19 +179,19 @@ if __name__ == '__main__':
     cv2.resizeWindow("frame", 1920, 1280)
 
     cv2.namedWindow("frame2", cv2.WINDOW_NORMAL)
-    cv2.resizeWindow("frame2", 60, 50)
+    # cv2.resizeWindow("frame2", 60, 50)
     
     # Use this to enable full screen for projection
     # cv2.setWindowProperty("frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    current_position = [[65, 115], [535, 595]]
+    current_position = recog_pos[1]
 
     i = 0
 
     # video_getter = VideoGet(0).start()
     frame_gen = FrameGenerator().start()
 
-    temp_frame_to_test = cv2.imread("dnn_training\\data_whole_images_with_shifted_projection_1\\1\\9.jpg")
+    temp_frame_to_test = cv2.imread("dnn_training\\data_whole_images_with_shifted_projection_3\\0\\4.jpg")
 
     shift_random = False
 
@@ -203,17 +209,22 @@ if __name__ == '__main__':
                 ])
             frame = cv2.warpAffine(frame, M, (frame.shape[1], frame.shape[0]))
         cv2.imshow("frame", frame)
-        if i % 3 == 0:
+        if i % 10 == 0:
             # fldr_out = "dnn_training\\data_whole_images_with_shifted_projection_4\\1"
             # os.makedirs(fldr_out, exist_ok=True)
             # frame_cam = video_getter.frame
             # frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
+            # temp_frame_to_test = cv2.imread("dnn_training\\data_whole_images_with_shifted_projection_1\\0\\" + str(i) + ".jpg")
+            frame_cam_cut = temp_frame_to_test[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
             # cv2.imshow("frame2", frame_cam_cut)
             # cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam)
             # print(current_position)
-            # check_page(frame_cam, 1)
+            # print(check_page(temp_frame_to_test, 1))
+            print(find_page(temp_frame_to_test))
         # This needs to be replaced by recognition code
-        wK = cv2.waitKey(1)
+            wK = cv2.waitKey(1)
+        else:
+            wK = cv2.waitKey(20)
         if wK & 0xFF == ord('q'):
             break
         elif wK & 0xFF == ord('1'):
@@ -232,6 +243,7 @@ if __name__ == '__main__':
             del frame_gen.current_page
             frame_gen.current_page = page_0()
         elif wK & 0xFF == ord('i'):
+            print("AAAAAAA")
             frame_gen.current_page.pass_control("0")
         elif wK & 0xFF == ord('o'):
             frame_gen.current_page.pass_control("1")

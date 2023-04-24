@@ -26,12 +26,12 @@ class Page:
             frame_to_display = frame
 
         # Commented out to capture data for training
-        # if self.finished_initial_video:
-        #     if len(self.overlays) > 0:
-        #         left = self.overlays[0].get_frame()
-        #         right = self.overlays[1].get_frame()
-        #         frame_to_display = np.concatenate((left, right), axis=1)
-        #         print(frame_to_display.shape)
+        if self.finished_initial_video:
+            if len(self.overlays) > 0:
+                left = self.overlays[0].get_frame()
+                right = self.overlays[1].get_frame()
+                frame_to_display = np.concatenate((left, right), axis=1)
+                print(frame_to_display.shape)
 
         # Calculate if lighted
         self.lighted = np.mean(frame_to_display[400:450, 400:450]) > 60
@@ -46,24 +46,24 @@ class Page:
 
 
 def page_1():
-    return Page("data\\page_videos\\strana1_salegendom.mp4", 
-                [PageCard("data\\page_card_sequences\\levo_izvlacenje_kartice.mp4", "0"), 
-                PageCard("data\\page_card_sequences\\desno_izvlacenje_kartice.mp4", "1")])
+    return Page("data\\page_videos\\strana1_salegendom_new.mp4", 
+                [PageCard("data\\page_videos\\odvojene_stranice\\page_1_left.mp4", "0"), 
+                PageCard("data\\page_videos\\odvojene_stranice\\page_1_right.mp4", "1")])
 
 def page_2():
-    return Page("data\\page_videos\\strana2_salegendom.mp4", 
-                [PageCard("data\\page_card_sequences\\levo_izvlacenje_kartice.mp4", "0"), 
+    return Page("data\\page_videos\\strana2_salegendom_new.mp4", 
+                [PageCard("data\\page_videos\\odvojene_stranice\\page_2_left.mp4", "0"), 
                 PageSlideshow("data\\page_slideshows\\2_right", "2", "3")])
 
 def page_3():
-    return Page("data\\page_videos\\strana3_salegendom.mp4", 
-                [PageCard("data\\page_card_sequences\\levo_izvlacenje_kartice.mp4", "0"), 
-                PageCard("data\\page_card_sequences\\desno_izvlacenje_kartice.mp4", "1")])
+    return Page("data\\page_videos\\strana3_salegendom_new.mp4", 
+                [PageCard("data\\page_videos\\odvojene_stranice\\page_3_left.mp4", "0"), 
+                PageCard("data\\page_videos\\odvojene_stranice\\page_3_right.mp4", "1")])
 
 def page_4():
-    return Page("data\\page_videos\\strana4_salegendom.mp4", 
-                [PageCard("data\\page_card_sequences\\levo_izvlacenje_kartice.mp4", "0"), 
-                PageCard("data\\page_card_sequences\\desno_izvlacenje_kartice.mp4", "1")])
+    return Page("data\\page_videos\\strana4_salegendom_new.mp4", 
+                [PageCard("data\\page_videos\\odvojene_stranice\\page_4_left.mp4", "0"), 
+                PageCard("data\\page_videos\\odvojene_stranice\\page_4_right.mp4", "1")])
 
 def page_0():
     return Page("data\\page_videos\\black_video.avi", [])
