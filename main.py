@@ -69,14 +69,33 @@ def check_page(image, page_num):
         with torch.no_grad():
             out = net(tnsr)
 
-        m_ind = torch.argmax(out).item()
-        m_val = torch.max(out).item()
+        page_val = out[1].item()
+        no_page_val = out[0].item()
 
-        print(m_ind, m_val)
+        if page_val < no_page_val * 3:
+            return True
+        else:
+            return False
 
 def find_page(image):
     for page_num in [1, 2, 3, 4]:
-        a = 5
+        net.load_state_dict(torch.load("dnn_training\\latest_standardized_model_" + str(page_num) + ".pt"))
+        with lock:
+            in_img = image[recog_pos[page_num][0][0]:recog_pos[page_num][0][1], recog_pos[page_num][1][0]:recog_pos[page_num][1][1]]
+            print(in_img.shape)
+            tnsr = transform(in_img)
+            tnsr = tnsr.unsqueeze(0)
+            with torch.no_grad():
+                out = net(tnsr)
+
+            page_val = out[1].item()
+            no_page_val = out[0].item()
+
+            if no_page_val < page_val * 3:
+                return page_num
+
+    return 0
+        
 
 class VideoGet:
     """
@@ -175,14 +194,10 @@ if __name__ == '__main__':
 
     shift_random = True
 
-    frame_to_find_position = cv2.imread(r"dnn_training\data_whole_images_with_shifted_projection_4\1\5.jpg")
-
-    current_page = page_1()
     while True:
         t_bef_get = time()
         frame = frame_gen.get_frame()
         # video_getter.set_lighted(frame_gen.current_page.lighted)
-        # frame = cv2.resize(frame, (1440, 920))
         if shift_random:
             if i % 50 == 0:
                 shift_by = 50
@@ -192,27 +207,15 @@ if __name__ == '__main__':
                 ])
             frame = cv2.warpAffine(frame, M, (frame.shape[1], frame.shape[0]))
         cv2.imshow("frame", frame)
-        # with lock:
-        #     video_getter.get()
         if i % 3 == 0:
             # fldr_out = "dnn_training\\data_whole_images_with_shifted_projection_4\\1"
             # os.makedirs(fldr_out, exist_ok=True)
             # frame_cam = video_getter.frame
             # frame_cam_cut = frame_cam[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
-            frame_cam_cut = frame_to_find_position[current_position[0][0]:current_position[0][1], current_position[1][0]:current_position[1][1]]
-            print(frame_cam_cut.shape)
-            # print(frame_cam)
-            cv2.imshow("frame2", frame_cam_cut)
+            # cv2.imshow("frame2", frame_cam_cut)
             # cv2.imwrite(os.path.join(fldr_out, str(len(os.listdir(fldr_out))) + ".jpg"), frame_cam)
-            print(current_position)
+            # print(current_position)
             # check_page(frame_cam, 1)
-        # i += 1
-        # t_after_get = time()
-        # print(t_after_get)
-        # print(t_bef_get)
-        # wait_t = int(40 - (t_after_get - t_bef_get) * 1000)
-        # print(wait_t)
-        # wait_t = max(1, wait_t)
         # This needs to be replaced by recognition code
         wK = cv2.waitKey(1)
         if wK & 0xFF == ord('q'):
@@ -251,8 +254,7 @@ if __name__ == '__main__':
 
         # touchboard_input = get_touchboard_input()
         # if touchboard_input != "":
-        #     # current_page = pages[int(touchbourd_input)]
-        #     current_page.pass_control(touchboard_input)
+        #     frame_gen.current_page.pass_control(touchboard_input)
 
         i += 1
 
