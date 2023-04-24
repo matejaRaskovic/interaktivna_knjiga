@@ -137,8 +137,7 @@ class VideoGet:
 
 class FrameGenerator:
     """
-    Class that continuously gets frames from a VideoCapture object
-    with a dedicated thread.
+    Class that generates next frame to be projected.
     """
 
     def __init__(self):
@@ -185,6 +184,8 @@ if __name__ == '__main__':
 
     # video_getter = VideoGet(0).start()
     frame_gen = FrameGenerator().start()
+
+    temp_frame_to_test = cv2.imread("dnn_training\\data_whole_images_with_shifted_projection_1\\1\\9.jpg")
 
     shift_random = False
 
